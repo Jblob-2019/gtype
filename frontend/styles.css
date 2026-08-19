@@ -2,7 +2,7 @@
   --bg:#0B0D17;
   --bg-2:#12142280;
   --ink:#EDEDF5;
-  --ghost:#5B5F73;
+  --ghost:#9AA0BC;
   --violet:#7C6FFF;
   --cyan:#4FD1C5;
   --amber:#FFB86B;
@@ -89,6 +89,7 @@ body{
   font-family:'IBM Plex Mono', monospace;
   min-height: 24px;
   display:flex;
+  isolation: isolate;       /* ponytail: keeps ghost + suggestion + textarea stacking sane */
 }
 .ghost-layer, textarea#typeInput{
   font:inherit; letter-spacing:inherit;
@@ -99,6 +100,45 @@ body{
   visibility:hidden;            /* ponytail: invisible but takes space → drives textarea autosize */
   pointer-events:none; padding:0;
   flex:1;
+  z-index: 0;
+}
+/* ponytail: the suggestion span lives inside the hidden ghost layer, so its position
+   follows the natural text flow (same as a real inline span). Override `visibility`
+   so the suggestion itself is visible. */
+.ghost-layer .suggestion{
+  visibility: visible;
+  color: var(--ghost);
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.7;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  animation: fadeIn 0.22s ease;
+}
+.ghost-layer .suggestion::before{
+  content: "·";
+  opacity: 0.45;
+  margin-right: 0.18em;
+  font-style: normal;
+}
+.ghost-layer .suggestion.flash{
+  color: var(--amber);
+  opacity: 1;
+  font-style: normal;
+  animation: accept 0.35s ease;
+}
+textarea#typeInput{
+  position:absolute; inset:0;
+  background:transparent; border:none; outline:none;
+  color:var(--ink);
+  caret-color:var(--cyan);
+  resize:none;
+  padding:0; margin:0;
+  z-index: 1;             /* textarea above the suggestion span */
+  font-family:inherit; font-size:inherit; line-height:inherit; letter-spacing:inherit;
+  overflow:auto;                  /* scroll within once max-height is hit */
+  scrollbar-width: thin;
+  scrollbar-color: #2A2D3D transparent;
 }
 textarea#typeInput{
   position:absolute; inset:0;
@@ -116,15 +156,7 @@ textarea#typeInput::-webkit-scrollbar{ width:6px; }
 textarea#typeInput::-webkit-scrollbar-thumb{ background:#2A2D3D; border-radius:3px; }
 textarea#typeInput::placeholder{ color:#3D4053; }
 
-.ghost-layer .suggestion{
-  color:var(--ghost);
-  animation: fadeIn 0.22s ease;
-}
-.ghost-layer .suggestion.flash{
-  color:var(--amber);
-  animation: accept 0.35s ease;
-}
-@keyframes fadeIn{ from{opacity:0; transform:translateX(-2px);} to{opacity:1; transform:translateX(0);} }
+@keyframes fadeIn{ from{opacity:0; transform:translateX(-2px);} to{opacity:0.7; transform:translateX(0);} }
 @keyframes accept{ 0%{opacity:1;} 60%{color:var(--amber); transform:scale(1.03);} 100%{color:var(--ink); transform:scale(1);} }
 
 .hint{

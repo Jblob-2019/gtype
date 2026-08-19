@@ -60,9 +60,10 @@ async function render(){
 }
 
 function updateUI(val) {
-  // ponytail: use textContent (not innerHTML) for the ghost layer because we mirror raw
-  // text into it for sizing. Suggestions are styled via a separate inner <span> appended
-  // AFTER measurement runs.
+  // ponytail: suggestion span lives INSIDE the hidden ghost layer as a real inline
+  // element. The layer has `visibility:hidden` (drives autosize); the span overrides
+  // with `visibility:visible`. Result: suggestion flows inline with val, wraps the
+  // same way, occupies the natural horizontal slot the textarea caret is in.
   ghost.textContent = val;
   if (currentSuggestion) {
     const span = document.createElement('span');
