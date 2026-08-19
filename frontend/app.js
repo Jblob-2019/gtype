@@ -80,17 +80,40 @@ function updateUI(val) {
 
 input.addEventListener('input', render);
 
+// ponytail: Tab accepts the current word AND immediately refetches the next
+// predicted word using the just-updated context. Repeatedly tapping Tab walks the
+// engine through the predicted sentence — each press reveals one more word of the
+// most likely continuation. Stops when the engine returns no suggestion.
+async function acceptAndContinue(){
+  if (!currentSuggestion) return;
+  const word = currentSuggestion;
+  const span = ghost.querySelector('.suggestion');
+  if (span) span.classList.add('flash');
+  await new Promise(r => setTimeout(r, 140));
+  // Commit the word, then immediately ask the engine what's likely to come next.
+  // currentSuggestion is reset to "" so render() doesn't fire a debounced fetch —
+  // we want the next prediction NOW, with the just-updated context.
+  input.value = input.value + word + " ";
+  currentSuggestion = "";
+  updateUI(input.value);
+  autosize(input.value);
+  // Synchronous fetch (no debounce) — the user is actively typing intent here.
+  const next = await fetchPrediction(input.value);
+  if (next) {
+    currentSuggestion = next;
+    updateUI(input.value);
+    autosize(input.value);
+  } else {
+    updateUI(input.value);
+    autosize(input.value);
+  }
+  input.focus();
+}
+
 input.addEventListener('keydown', (e) => {
-  // ponytail: Enter now inserts a newline (textarea behavior). Shift+Enter same. Plain Enter on empty submit isn't needed since Send is via teach pop / clear. To accept suggestion: Tab (unchanged) or /accept hotkey.
   if (e.key === 'Tab' && currentSuggestion){
     e.preventDefault();
-    const span = ghost.querySelector('.suggestion');
-    if (span) span.classList.add('flash');
-    setTimeout(() => {
-      input.value = input.value + currentSuggestion + " ";
-      render();
-      input.focus();
-    }, 140);
+    acceptAndContinue();
   }
   if (e.key === 'Escape'){
     if (!teachPop.hidden) { closeTeach(); return; }
