@@ -1,0 +1,197 @@
+# =====================================================================
+# GhostType — self-bootstrapping dev workflow
+# =====================================================================
+# ONE COMMAND TO RULE THEM ALL:
+#
+#     npm install        # one-time, downloads concurrently + node deps
+#     npm run dev        # checks Python venv + deps + model, trains if
+#                        # missing, then boots backend :4000 + frontend :3000
+#                        # in parallel. Ctrl+C cleanly kills both.
+#
+# That's it. No manual setup, no separate shell for backend, no "did I
+# remember to train?". Fresh clone → npm install → npm run dev → done.
+# =====================================================================
+
+name: ghosttype-dev
+version: 2
+description: |
+  Self-bootstrapping single-command dev workflow. npm run dev verifies the
+  Python venv, installs missing Python deps, trains the n-gram model if
+  model.pkl is absent, then launches backend (FastAPI :4000) and frontend
+  (vanilla JS :3000) in parallel with color-prefixed log streams.
+
+# ---------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------
+entrypoint: npm run dev
+implementation: scripts/dev.js          # inlined bootstrap + orchestrator
+fallback_script: scripts/bootstrap.js   # standalone pre-flight (run before train/retrain)
+
+# ---------------------------------------------------------------------
+# What `npm run dev` does, in order
+# ---------------------------------------------------------------------
+steps:
+
+  - id: bootstrap-python
+    description: "Verify Python 3.10+ is in PATH"
+    check: "python --version  (or: py -3 --version)"
+    on_failure: "Install Python from python.org, tick 'Add to PATH', re-run"
+
+  - id: bootstrap-venv
+    description: "Ensure backend/.venv exists"
+    check: "backend/.venv/{Scripts,bin}/python exists"
+    on_missing: "Run: python -m venv backend/.venv"
+
+  - id: bootstrap-pip
+    description: "Install backend/requirements.txt into the venv"
+    check: "deps already satisfied"
+    on_missing: "Run: backend/.venv/Scripts/pip install -r backend/requirements.txt"
+    deps:
+      - fastapi
+      - uvicorn
+      - pydantic
+      - pytest
+      - httpx
+
+  - id: bootstrap-corpus
+    description: "Check Cornell Movie-Dialogs corpus"
+    path: "data/cornell/movie_lines.txt"
+    on_missing: |
+      WARN — continues anyway. Predictions will be limited to the
+      starter corpus only (~250 phrases). Download from:
+        https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html
+      and extract movie_lines.txt into data/cornell/, then re-run.
+
+  - id: bootstrap-model
+    description: "Train n-gram model if backend/data/model.pkl is missing"
+    check: "backend/data/model.pkl exists"
+    on_missing: "Run: backend/.venv/Scripts/python backend/train.py"
+    duration: "<10s"
+    flags:
+      retrain: "npm run retrain   # force rebuild even if model.pkl exists"
+
+  - id: spawn-backend
+    description: "FastAPI prediction engine"
+    command: "backend/.venv/Scripts/python -m uvicorn app:app --host 127.0.0.1 --port 4000 --reload"
+    cwd: backend
+    port: 4000
+    log_color: blue
+    log_prefix: "[backend]"
+    healthcheck: http://localhost:4000/health
+    api_docs:    http://localhost:4000/docs
+
+  - id: spawn-frontend
+    description: "Vanilla HTML/JS chat bar"
+    command: "node server.js"
+    cwd: frontend
+    port: 3000
+    log_color: green
+    log_prefix: "[frontend]"
+
+# ---------------------------------------------------------------------
+# Parallelism
+# ---------------------------------------------------------------------
+parallel: true
+shutdown_signal: SIGINT        # Ctrl+C kills both children
+log_passthrough: true          # each service's stdout streams live with color prefix
+
+# ---------------------------------------------------------------------
+# Ports
+# ---------------------------------------------------------------------
+ports:
+  frontend: 3000               # user opens this in browser
+  backend:  4000               # FastAPI; also serves Swagger UI at /docs
+
+# ---------------------------------------------------------------------
+# Environment variables (all optional)
+# ---------------------------------------------------------------------
+env:
+  GHOSTTYPE_MODEL: "backend/data/model.pkl"
+  GHOSTTYPE_PERSONAL: "backend/data/personal.txt"
+  GHOSTTYPE_PERSONAL_WEIGHT: "0.3"   # 0 = pure base, 1 = pure personal
+
+# ---------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------
+cors:
+  backend_allows_origins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+
+# ---------------------------------------------------------------------
+# npm scripts reference
+# ---------------------------------------------------------------------
+scripts:
+  dev:        "node scripts/dev.js"          # canonical entry — does everything
+  dev:raw:    "concurrently backend + frontend"  # bypass bootstrap if deps are known good
+  train:      "bootstrap + train.py"         # manual training (re-run only)
+  retrain:    "bootstrap --retrain"          # force rebuild model.pkl
+  test:       "pytest backend/tests/"        # engine + API tests
+
+# ---------------------------------------------------------------------
+# Quick commands
+# ---------------------------------------------------------------------
+commands:
+  health:       "curl http://localhost:4000/health"
+  predict_demo: |
+    curl -X POST http://localhost:4000/predict ^
+      -H "Content-Type: application/json" ^
+      -d "{\"text\":\"how are\"}"
+  teach_demo: |
+    curl -X POST http://localhost:4000/teach ^
+      -H "Content-Type: application/json" ^
+      -d "{\"phrases\":[\"janarthanana\"]}"
+
+# ---------------------------------------------------------------------
+# Deploy steps (fresh machine → running demo)
+# ---------------------------------------------------------------------
+deploy_steps:
+  - "git clone <repo-url>"
+  - "cd <repo>"
+  - "npm install"           # one-time, downloads concurrently
+  - "npm run dev"           # everything from here is automatic
+
+# ---------------------------------------------------------------------
+# Troubleshooting
+# ---------------------------------------------------------------------
+troubleshooting:
+  port_in_use:
+    symptom: "EADDRINUSE :::4000 (or :::3000)"
+    fix:
+      - "Windows: netstat -ano | findstr :4000  →  taskkill /PID <pid> /F"
+      - "POSIX:   lsof -i :4000                  →  kill -9 <pid>"
+
+  cors_error_in_browser:
+    symptom: "No 'Access-Control-Allow-Origin' header"
+    fix:
+      - "Confirm you're opening http://localhost:3000 (not :4000)"
+      - "Backend CORS allowlist includes that origin (see cors above)"
+
+  model_pickle_legacy:
+    symptom: "AttributeError: 'NgramEngine' object has no attribute 'p_unigrams'"
+    cause: "Model pickled before Phase 1.5 added personal tables."
+    fix: "Auto — engine.py:__setstate__ backfills missing attributes."
+
+  venv_rebuilt_dependencies_missing:
+    symptom: "ModuleNotFoundError: fastapi / uvicorn / pydantic"
+    fix: "Just re-run npm run dev — it pip-installs on every run (idempotent)."
+
+  npm_run_dev_silent:
+    symptom: "Command exits immediately, no log output"
+    fix:
+      - "Update Node to 18+"
+      - "Run node scripts/bootstrap.js directly to see which step fails"
+
+# ---------------------------------------------------------------------
+# Phase 2 / 3 mapping (forward-looking, not active yet)
+# ---------------------------------------------------------------------
+future_phases:
+  phase_2:
+    additions:
+      - "Docker Compose wrapping both services (single `docker compose up`)"
+      - "SQLite history persistence"
+      - "Keyboard nav + phrase suggestions"
+  phase_3:
+    additions:
+      - "Engine swap: n-gram → Ollama local LLM behind same /predict"
+      - "Engine badge in UI showing active engine"

@@ -1,0 +1,403 @@
+# =====================================================================
+# GhostType — starter training corpus (simple phrases + focus lines)
+# ---------------------------------------------------------------------
+# This file is a hand-curated seed dataset shipped with the repo. It
+# sits next to (and is merged with) the Cornell Movie-Dialogs corpus
+# during training. Purpose:
+#   1. Cover common everyday phrases ("how are you", "thank you", etc.)
+#      that the chat bar will see constantly.
+#   2. Cover common "focus lines" — sentence starters people actually
+#      type when drafting notes / messages ("let me think", "i need to",
+#      "the next step is", etc.).
+#   3. Cover Jana-style introductions and Indian-English patterns so
+#      suggestions feel natural to the operator.
+#
+# Training merges this file + the Cornell corpus at the line level, so
+# every line here is treated as one independent utterance.
+# Format: one phrase per line. Lowercase, no trailing punctuation.
+# =====================================================================
+
+# ---------- greetings + identity ----------
+hello my name is
+hello my name is jana
+hello my name is janarthanana
+hello i am jana
+hello i am janarthanana
+my name is jana
+my name is janarthanana
+you may call me jana
+you may call me janarthanana
+you can call me jana
+call me jana
+i go by jana
+nice to meet you
+nice to meet you too
+how are you
+how are you doing
+how are you today
+how is it going
+how is everything
+i am good
+i am doing well
+i am doing great
+i am doing fine
+i am fine thanks
+i am okay
+pretty good thanks
+not much just chilling
+not much just coding
+hey what's up
+hey how is it going
+hey there
+hi there
+good morning
+good afternoon
+good evening
+good night
+have a good day
+have a great day
+talk to you later
+see you later
+see you soon
+catch you later
+
+# ---------- gratitude + small talk ----------
+thank you
+thank you so much
+thanks a lot
+thanks a ton
+thanks a million
+much appreciated
+i appreciate it
+i really appreciate it
+that means a lot
+no problem
+no worries
+my pleasure
+don't mention it
+you're welcome
+anytime
+sure thing
+sounds good
+sounds great
+sounds good to me
+makes sense
+fair enough
+got it
+understood
+i see
+i see what you mean
+makes total sense
+
+# ---------- focus lines — sentence starters for notes / writing ----------
+let me think
+let me think about this
+let me think about it
+i think
+i think we should
+i think the best
+i think the next
+i think it's time to
+i need to
+i need to make
+i need to write
+i need to finish
+i need to ship
+i need to learn
+i need to figure out
+i want to
+i want to build
+i want to make
+i want to ship
+i want to try
+the next step is
+the next step would be
+the first step is
+the plan is to
+the goal is to
+the idea is to
+the reason is that
+the thing is
+the thing is that
+here is what i
+here is the plan
+here is what we
+to do this we
+to make this work
+to make it work
+in order to
+in order to make
+in this case
+in that case
+for example
+for instance
+on the other hand
+at the same time
+in the long run
+in the short term
+as a result
+because of this
+because of that
+so that we can
+so that i can
+
+# ---------- work / dev / coding ----------
+let's build
+let's build this
+let's ship it
+let's get started
+let me push
+let me commit
+let me deploy
+let me run
+let me test
+let me check
+let me see
+let me look
+let me find
+let me search
+let me try
+i will push
+i will commit
+i will deploy
+i will fix
+i will check
+i will test
+i will build
+i will write
+i will make
+i will ship
+i will try
+we need to
+we need to ship
+we need to fix
+we need to test
+we need to build
+we need to make
+we should ship
+we should fix
+we should test
+we should build
+we should make
+push the code
+commit the code
+deploy the app
+run the tests
+write the code
+build the app
+ship the feature
+ship the fix
+fix the bug
+test the app
+check the logs
+read the docs
+read the file
+read the code
+open the file
+open the project
+open the repo
+open the dashboard
+open the browser
+close the issue
+merge the pull request
+create the pull request
+
+# ---------- questions ----------
+what do you
+what do you think
+what do you mean
+what do you want
+what is the
+what is this
+what is going on
+what is happening
+what is the plan
+what is the next
+where do we
+where do we go
+where do we start
+where is the
+where is the file
+where is the code
+where is the repo
+how do we
+how do we ship
+how do we deploy
+how do we fix
+how do we test
+how do we start
+how does it
+how does it work
+how does this work
+how can i
+how can i make
+how can i fix
+how can i ship
+how can i learn
+why is it
+why is this happening
+why is the
+why are we
+why do we
+when do we
+when do we ship
+when do we deploy
+when do we start
+who is going to
+who will
+who will do
+can you
+can you make
+can you build
+can you ship
+can you fix
+can you help
+
+# ---------- transitions + connectors ----------
+on the one hand
+on the other
+first of all
+second of all
+lastly
+finally
+to summarize
+in summary
+in conclusion
+overall
+basically
+essentially
+honestly
+frankly
+to be honest
+to be fair
+the thing about
+the problem with
+the good thing is
+the bad thing is
+the cool thing is
+the funny thing is
+the interesting thing is
+
+# ---------- common short replies ----------
+yes please
+no thanks
+maybe later
+let me check
+let me see
+i will try
+i will do
+sounds good
+sounds great
+sounds right
+makes sense
+fair enough
+okay cool
+alright cool
+right right
+yeah yeah
+yep yep
+nope nope
+absolutely
+definitely
+totally
+exactly
+precisely
+for sure
+of course
+
+# ---------- closing / ending ----------
+that is all
+that is it
+that is the plan
+that is the goal
+that is the idea
+that's all for now
+that's it for now
+that's the plan
+end of message
+end of note
+end of thought
+done for now
+done for today
+done for the day
+that's all
+that's it
+ok thanks
+okay thanks
+alright thanks
+cool thanks
+great thanks
+bye for now
+bye bye
+
+# ---------- Jana-style + Indian-English flavor ----------
+i will do it later
+i will do it now
+i will check and
+i will check and let
+let me check and
+let me check and revert
+will check and
+will check and let you
+will revert back
+will get back to you
+will update you
+will keep you posted
+will do it
+will do that
+will do this
+will do it tomorrow
+will do it today
+will do it now
+will do it later
+will let you know
+will share the
+will share the update
+will share the link
+will share the file
+no issues at all
+no issues from my side
+from my side it is
+from my side all
+on my side all
+from my end
+from my end it
+on my end it
+is it possible to
+is there any way to
+is there a way to
+can we please
+can we do
+can we make
+can we ship
+can we try
+let us see
+let us try
+let us make
+let us build
+let us ship
+we can do
+we can make
+we can ship
+we can try
+we can build
+i think it is
+i think it will
+i think it would
+i think we can
+i think we should
+i feel like
+i feel like we
+it would be
+it would be good
+it would be great
+it would be nice
+it would help
+i am planning to
+i am planning on
+i am working on
+i am trying to
+i am going to
+i am going to make
+i am going to build
+i am going to ship

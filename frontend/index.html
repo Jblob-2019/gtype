@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>GhostType — predictive text</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="aurora">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+
+  <div class="mark"><span class="dot"></span> GhostType — running locally</div>
+
+  <div class="stage">
+    <div class="bar-wrap" id="barWrap">
+      <div class="bar">
+        <div class="type-field" id="typeField">
+          <div class="ghost-layer" id="ghostLayer"></div>
+          <textarea id="typeInput" rows="1" placeholder="Start typing…" autocomplete="off" spellcheck="false"></textarea>
+        </div>
+        <button class="teach-btn" id="teachBtn" title="Teach GhostType a word or phrase" aria-label="Teach">+</button>
+      </div>
+
+      <div class="teach-pop" id="teachPop" hidden>
+        <div class="teach-title">Teach a word</div>
+        <input class="teach-input" id="teachInput" type="text" placeholder="e.g. janarthanana" autocomplete="off" spellcheck="false" />
+        <div class="teach-actions">
+          <button class="teach-btn-inline" id="teachSingleBtn">Teach</button>
+          <button class="teach-link" id="teachListToggle">Paste list…</button>
+        </div>
+        <textarea class="teach-textarea" id="teachList" hidden placeholder="One phrase per line&#10;e.g.&#10;ghosttype&#10;self-hosted predictive text&#10;let's ship the MVP"></textarea>
+        <button class="teach-btn-inline full" id="teachListBtn" hidden>Teach list</button>
+        <div class="teach-toast" id="teachToast" hidden></div>
+      </div>
+    </div>
+    <div class="hint">
+      <span><kbd>Tab</kbd> accept</span>
+      <span><kbd>Esc</kbd> clear</span>
+      <span><kbd>+</kbd> teach words</span>
+      <span class="meta" id="meta"></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

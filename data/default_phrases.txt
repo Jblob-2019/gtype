@@ -1,0 +1,305 @@
+# =====================================================================
+# GhostType — default phrases (shipped in repo, taught on first run)
+# ---------------------------------------------------------------------
+# 200+ hand-curated phrases covering the most common English typing
+# patterns: greetings, introductions, gratitude, focus lines, work/dev
+# vocabulary, questions, transitions, closings.
+#
+# Loaded by:
+#   • train.py (boosted 50× so it outweighs the noisy Cornell tail)
+#   • bootstrap.js on every fresh install (fold into personal tables so
+#     these phrases work even before the model is retrained)
+#
+# Format: one phrase per line. Lines starting with `#` are comments.
+# =====================================================================
+
+# ---------- greetings ----------
+hello there
+hello everyone
+hello world
+hello how are you
+hi there
+hi everyone
+hi how are you
+hey there
+hey how is it going
+hey what's up
+good morning everyone
+good afternoon everyone
+good evening everyone
+good morning how are you
+good afternoon how are you
+
+# ---------- introductions ----------
+my name is jana
+my name is janarthanana
+i am jana
+i am janarthanana
+i go by jana
+you can call me jana
+you may call me jana
+nice to meet you
+nice to meet you too
+pleased to meet you
+let me introduce myself
+
+# ---------- thanks + small talk ----------
+thank you very much
+thank you so much
+thanks a lot
+thanks a ton
+thanks for the help
+thanks for everything
+thanks for the update
+thanks for letting me know
+much appreciated
+i really appreciate it
+i appreciate the help
+that means a lot
+no problem at all
+no worries at all
+my pleasure
+don't mention it
+you are welcome
+anytime at all
+sure thing
+sounds good to me
+sounds great to me
+that works for me
+makes sense to me
+fair enough
+got it thanks
+understood thanks
+okay cool
+alright cool
+right right
+yeah yeah
+yep yep
+nope nope
+absolutely right
+definitely yes
+totally agree
+exactly right
+for sure
+of course
+
+# ---------- focus lines — sentence starters ----------
+let me think
+let me think about this
+let me think about it
+i think
+i think we should
+i think the best
+i think the next
+i think it's time to
+i need to
+i need to make
+i need to write
+i need to finish
+i need to ship
+i need to learn
+i need to figure out
+i want to
+i want to build
+i want to make
+i want to ship
+i want to try
+the next step is
+the next step would be
+the first step is
+the plan is to
+the goal is to
+the idea is to
+the reason is that
+the thing is
+the thing is that
+here is what i
+here is the plan
+here is what we
+to do this we
+to make this work
+in order to
+in order to make
+in this case
+in that case
+for example
+for instance
+on the other hand
+at the same time
+in the long run
+in the short term
+as a result
+because of this
+because of that
+so that we can
+so that i can
+
+# ---------- work + dev ----------
+let's build
+let's build this
+let's ship it
+let's get started
+let me push
+let me commit
+let me deploy
+let me run
+let me test
+let me check
+let me see
+let me look
+let me find
+let me search
+let me try
+i will push
+i will commit
+i will deploy
+i will fix
+i will check
+i will test
+i will build
+i will write
+i will make
+i will ship
+i will try
+we need to
+we need to ship
+we need to fix
+we need to test
+we need to build
+we need to make
+we should ship
+we should fix
+we should test
+we should build
+we should make
+push the code
+commit the code
+deploy the app
+run the tests
+write the code
+build the app
+ship the feature
+ship the fix
+fix the bug
+test the app
+check the logs
+read the docs
+read the file
+read the code
+open the file
+open the project
+open the repo
+open the dashboard
+open the browser
+close the issue
+merge the pull request
+create the pull request
+
+# ---------- questions ----------
+what do you
+what do you think
+what do you mean
+what do you want
+what is the
+what is this
+what is going on
+what is happening
+what is the plan
+what is the next
+where do we
+where do we go
+where do we start
+where is the
+where is the file
+where is the code
+where is the repo
+how do we
+how do we ship
+how do we deploy
+how do we fix
+how do we test
+how do we start
+how does it
+how does it work
+how does this work
+how can i
+how can i make
+how can i fix
+how can i ship
+how can i learn
+why is it
+why is this happening
+why is the
+why are we
+why do we
+when do we
+when do we ship
+when do we deploy
+when do we start
+who is going to
+who will
+who will do
+can you
+can you make
+can you build
+can you ship
+can you fix
+can you help
+
+# ---------- transitions + connectors ----------
+on the one hand
+on the other
+first of all
+second of all
+lastly
+finally
+to summarize
+in summary
+in conclusion
+overall
+basically
+essentially
+honestly
+frankly
+to be honest
+to be fair
+the thing about
+the problem with
+the good thing is
+the bad thing is
+the cool thing is
+the funny thing is
+the interesting thing is
+
+# ---------- closing + ending ----------
+that is all
+that is it
+that is the plan
+that is the goal
+that is the idea
+that's all for now
+that's it for now
+that's the plan
+end of message
+end of note
+end of thought
+done for now
+done for today
+done for the day
+that's all
+that's it
+ok thanks
+okay thanks
+alright thanks
+cool thanks
+great thanks
+bye for now
+bye bye
+see you later
+see you soon
+talk to you later
+catch you later
+have a good day
+have a great day
+have a good night
+good night

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>GhostType — predictive text</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0D17;
+    --bg-2:#12142280;
+    --ink:#EDEDF5;
+    --ghost:#5B5F73;
+    --violet:#7C6FFF;
+    --cyan:#4FD1C5;
+    --amber:#FFB86B;
+    --border-rest: rgba(124,111,255,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; height:100%;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    overflow:hidden;
+  }
+  body{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; min-height:100vh; padding:24px;
+  }
+
+  /* ambient aurora blobs */
+  .aurora{ position:fixed; inset:0; filter:blur(90px); z-index:0; pointer-events:none; opacity:0.55;}
+  .blob{ position:absolute; border-radius:50%; }
+  .blob.b1{ width:46vw; height:46vw; left:-10vw; top:-12vw;
+    background:radial-gradient(circle at 30% 30%, var(--violet), transparent 70%);
+    animation: drift1 22s ease-in-out infinite alternate; }
+  .blob.b2{ width:40vw; height:40vw; right:-8vw; bottom:-10vw;
+    background:radial-gradient(circle at 60% 60%, var(--cyan), transparent 70%);
+    animation: drift2 26s ease-in-out infinite alternate; }
+  .blob.b3{ width:26vw; height:26vw; left:38vw; bottom:20vh;
+    background:radial-gradient(circle, var(--amber), transparent 70%);
+    opacity:0.35;
+    animation: drift3 30s ease-in-out infinite alternate; }
+
+  @keyframes drift1{ from{transform:translate(0,0) scale(1);} to{transform:translate(6vw,8vh) scale(1.08);} }
+  @keyframes drift2{ from{transform:translate(0,0) scale(1);} to{transform:translate(-7vw,-6vh) scale(1.05);} }
+  @keyframes drift3{ from{transform:translate(0,0);} to{transform:translate(-4vw,-10vh);} }
+
+  .mark{
+    position:relative; z-index:1;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500; font-size:14px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--ghost);
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:28px;
+  }
+  .mark .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:linear-gradient(135deg,var(--violet),var(--cyan));
+    box-shadow:0 0 10px var(--violet);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:0.5; transform:scale(0.85);} 50%{opacity:1; transform:scale(1.1);} }
+
+  .stage{ position:relative; z-index:1; width:min(640px, 90vw); }
+
+  .bar-wrap{
+    position:relative;
+    border-radius:18px;
+    padding:2px;
+    background: conic-gradient(from var(--angle,0deg),
+      var(--violet), var(--cyan), var(--amber), var(--violet));
+    animation: spin 6s linear infinite;
+    box-shadow: 0 0 40px -8px rgba(124,111,255,0.35);
+    transition: box-shadow 0.4s ease;
+  }
+  .bar-wrap.active{ box-shadow: 0 0 60px -4px rgba(79,209,197,0.45); }
+
+  @property --angle{ syntax:'<angle>'; initial-value:0deg; inherits:false; }
+  @keyframes spin{ to{ --angle:360deg; } }
+
+  .bar{
+    position:relative;
+    background: linear-gradient(180deg, #10121EF0, #0C0E18F5);
+    border-radius:16px;
+    padding:20px 22px;
+    min-height:64px;
+    display:flex; align-items:center;
+  }
+
+  .type-field{
+    position:relative; flex:1; font-size:19px; line-height:1.4;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .ghost-layer, input{
+    position:absolute; left:0; top:0; right:0;
+    white-space:pre; font:inherit; letter-spacing:inherit;
+  }
+  .ghost-layer{
+    color:transparent; pointer-events:none; z-index:0;
+  }
+  .ghost-layer .suggestion{
+    color:var(--ghost);
+    animation: fadeIn 0.22s ease;
+  }
+  .ghost-layer .suggestion.flash{
+    color:var(--amber);
+    animation: accept 0.35s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateX(-2px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes accept{ 0%{opacity:1;} 60%{color:var(--amber); transform:scale(1.03);} 100%{color:var(--ink); transform:scale(1);} }
+
+  input{
+    background:transparent; border:none; outline:none; color:var(--ink);
+    caret-color:var(--cyan); z-index:1; width:100%;
+    position:static;
+  }
+  input::placeholder{ color:#3D4053; }
+
+  .hint{
+    position:relative; z-index:1;
+    margin-top:16px; font-size:12px; color:var(--ghost);
+    display:flex; gap:18px; letter-spacing:0.02em;
+  }
+  .hint kbd{
+    font-family:inherit; border:1px solid #2A2D3D; border-radius:5px;
+    padding:1px 6px; color:#8B8FA3; background:#14162280;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .blob, .bar-wrap, .mark .dot{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="aurora">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+
+  <div class="mark"><span class="dot"></span> GhostType — running locally</div>
+
+  <div class="stage">
+    <div class="bar-wrap" id="barWrap">
+      <div class="bar">
+        <div class="type-field">
+          <div class="ghost-layer" id="ghostLayer"></div>
+          <input id="typeInput" type="text" placeholder="Start typing…" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+    </div>
+    <div class="hint">
+      <span><kbd>Tab</kbd> accept</span>
+      <span><kbd>Esc</kbd> clear</span>
+    </div>
+  </div>
+
+<script>
+  // tiny demo prediction table — last word -> ranked next words
+  const table = {
+    "how": ["are", "do", "much"],
+    "are": ["you", "we", "things"],
+    "i": ["am", "think", "want"],
+    "want": ["to", "a", "some"],
+    "the": ["quick", "best", "same"],
+    "quick": ["brown", "way", "fix"],
+    "brown": ["fox", "bag"],
+    "thank": ["you", "god"],
+    "let": ["me", "us", "it"],
+    "can": ["you", "we", "i"],
+    "please": ["send", "help", "check"],
+    "good": ["morning", "night", "job"],
+  };
+
+  const input = document.getElementById('typeInput');
+  const ghost = document.getElementById('ghostLayer');
+  const wrap = document.getElementById('barWrap');
+  let currentSuggestion = "";
+
+  function predict(text){
+    const words = text.trim().split(/\s+/);
+    const last = words[words.length-1]?.toLowerCase() || "";
+    if (!last || !table[last]) return "";
+    // pick top suggestion, avoid repeating if trailing space already
+    return table[last][0];
+  }
+
+  function render(){
+    const val = input.value;
+    const trailingSpace = val.endsWith(" ") || val === "";
+    currentSuggestion = trailingSpace ? predict(val) : "";
+    const base = escapeHtml(val);
+    ghost.innerHTML = currentSuggestion
+      ? base + '<span class="suggestion">' + escapeHtml(currentSuggestion) + '</span>'
+      : base;
+    wrap.classList.toggle('active', !!currentSuggestion);
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  input.addEventListener('input', render);
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' && currentSuggestion){
+      e.preventDefault();
+      const span = ghost.querySelector('.suggestion');
+      if (span) span.classList.add('flash');
+      setTimeout(() => {
+        input.value = input.value + currentSuggestion + " ";
+        render();
+        input.focus();
+      }, 140);
+    }
+    if (e.key === 'Escape'){
+      input.value = "";
+      render();
+    }
+  });
+
+  render();
+  input.focus();
+</script>
+</body>
+</html>

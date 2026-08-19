@@ -1,0 +1,27 @@
+{
+  "name": "ghosttype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local predictive-text chat bar. FastAPI + n-gram + plain JS. Single-command dev: npm run dev checks deps + trains + boots both servers.",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:raw": "concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "cd backend && .venv\\Scripts\\python -m uvicorn app:app --host 127.0.0.1 --port 4000 --reload",
+    "dev:backend:posix": "cd backend && .venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 4000 --reload",
+    "dev:frontend": "node frontend/server.js",
+    "train": "node scripts/bootstrap.js && cd backend && .venv\\Scripts\\python train.py",
+    "train:posix": "node scripts/bootstrap.js && cd backend && .venv/bin/python train.py",
+    "retrain": "node scripts/bootstrap.js --retrain",
+    "test": "cd backend && .venv\\Scripts\\python -m pytest tests/ -q",
+    "test:posix": "cd backend && .venv/bin/python -m pytest tests/ -q",
+    "build": "echo \"no build step — vanilla frontend\" && exit 0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Jana",
+  "license": "MIT"
+}
