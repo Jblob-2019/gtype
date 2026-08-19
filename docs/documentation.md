@@ -558,3 +558,13 @@ Most predictions already worked because starter_corpus.txt had the high-signal p
 - Ghost-layer visibility before trailing space.
 - **New:** should the default-phrases list be split into category files (`defaults/greetings.txt`, `defaults/work.txt`) and concatenated at train-time? Easier to maintain individually, harder to lose changes to.
 - **New:** is 240 phrases the right count, or trim to ~100 high-signal ones? More = more Cornell-drowned, fewer = more likely a useful context is missing.
+
+
+---
+### 2026-08-19: Performance Optimization & Autocorrect Automation
+
+**Changes Made:**
+1. **Instant Autocomplete**: Decoupled the autocomplete engine from the LLM. It now relies purely on the N-gram engine (`engine.py`) and evaluates predictions on *every keystroke* instead of waiting for spaces. Added prediction caching in the frontend.
+2. **Automated Grammar Correction**: Removed the manual `Shift+Tab` requirement. The UI now listens for a 400ms pause and automatically replaces text with the AI-corrected grammar in the background. Added strict instructions to `gemma4:31b-cloud` to preserve original casing and avoid ALL CAPS.
+3. **Fixed Windows Networking Lag**: Replaced all `localhost` calls with `127.0.0.1` to bypass the Windows 2-second WPAD DNS resolution penalty.
+4. **Resolved Ghost Processes**: Fixed an issue where the background `dev.js` node script was leaving invisible Python servers running on port 4000. Killed all orphaned instances and ensured the system runs entirely on the fresh codebase.

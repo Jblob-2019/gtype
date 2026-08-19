@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from engine import NgramEngine
+import llm
 
 app = FastAPI(title="GhostType")
 app.add_middleware(
@@ -89,11 +90,28 @@ class TeachResponse(BaseModel):
     taught: int
     vocab_size: int
 
+class RewriteRequest(BaseModel):
+    text: str
+    tone: str   # "formal" | "friendly" | "informal"
+
+class RewriteResponse(BaseModel):
+    rewritten: str
+    source: str   # "cloud" | "local" | "error"
+
+class GrammarRequest(BaseModel):
+    text: str
+
+class GrammarResponse(BaseModel):
+    corrected: str
+    source: str
+
 @app.get("/health")
-def health(): return {"status": "ok", "model": "ngram-v1", "personal_weight": PERSONAL_WEIGHT}
+def health(): return {"status": "ok", "model": "ngram-v1", "personal_weight": PERSONAL_WEIGHT, "llm_cloud": llm.CLOUD_MODEL, "llm_local": llm.LOCAL_MODEL}
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest):
+    # ponytail: pure N-gram prediction for instant response.
+    # LLM fallback removed to guarantee zero-latency typing.
     return {"suggestions": engine.predict(req.text, k=3)}
 
 # ponytail: append-only write to personal.txt — survives crashes, easy to edit by hand.
@@ -108,3 +126,15 @@ def teach(req: TeachRequest):
             total_tokens += engine.teach(phrase)
             f.write(phrase + "\n")
     return {"taught": len(cleaned), "vocab_size": len(engine.p_unigrams)}
+
+@app.post("/rewrite", response_model=RewriteResponse)
+def rewrite(req: RewriteRequest):
+    """Tone-rewrite via Ollama (cloud primary, local fallback). Frontend shows preview."""
+    out, source = llm.rewrite(req.text, req.tone)
+    return {"rewritten": out, "source": source}
+
+@app.post("/grammar", response_model=GrammarResponse)
+def grammar(req: GrammarRequest):
+    """Grammar and spelling correction via Ollama."""
+    out, source = llm.check_grammar(req.text)
+    return {"corrected": out, "source": source}
