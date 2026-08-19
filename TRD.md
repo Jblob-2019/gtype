@@ -1,96 +1,53 @@
 # Technical Requirements Document (TRD)
-## Project: Predictive Text Chat Bar (Local Dashboard)
+## Project: GhostType (Predictive Text & Smart Writing Assistant)
 
 ### 1. Architecture Overview
-
 ```
-┌─────────────────────────┐        ┌──────────────────────────┐
-│   Frontend (Dashboard)   │  HTTP  │   Backend (Prediction)   │
-│  Chat-bar UI, JS fetch   │ <----> │  FastAPI/Flask service   │
-│  shows suggestion chips  │        │  n-gram model in memory  │
-└─────────────────────────┘        └──────────────────────────┘
-                                              │
-                                              ▼
-                                   ┌──────────────────────────┐
-                                   │  Corpus / Training data   │
-                                   │  (.txt file(s) on disk)   │
-                                   └──────────────────────────┘
+┌─────────────────────────┐          ┌──────────────────────────┐
+│   Frontend (Node :3000) │          │   Backend (FastAPI :4000)│
+│  Vanilla JS/HTML/CSS    │   HTTP   │  engine.py (N-Gram)      │
+│  Dynamic Textarea Sizing│ <------> │  llm.py (Ollama LLM)     │
+│  UI state & Caching     │          └──────────────────────────┘
+└─────────────────────────┘                       │
+                                                  ▼
+                                     ┌──────────────────────────┐
+                                     │  Corpora / Data Models   │
+                                     │  (model.pkl, personal.txt│
+                                     └──────────────────────────┘
 ```
-
-Everything runs on localhost. No external network calls at inference time.
+All components run locally. Frontend fetches from `http://127.0.0.1:4000` to bypass Windows IPv6/WPAD DNS resolution latency penalties.
 
 ### 2. Tech Stack
-
 | Layer | Choice | Why |
 |---|---|---|
-| Prediction engine | Python (custom n-gram / `markovify` / `nltk`) | Simple, fast to build, explainable |
-| Backend API | FastAPI (or Flask) | Lightweight, easy `/predict` endpoint, good local dev experience |
-| Frontend | Plain HTML/JS, or React if you want it to match a bigger dashboard later | Fast to wire up a chat-bar UI |
-| Data storage (optional Phase 2) | SQLite | Simple local persistence for user history |
-| Hosting | Local process / Docker Compose | Matches your existing self-hosted setup style |
+| Prediction Engine | Custom Python N-gram (`engine.py`) | 0.0ms latency; O(1) dict lookups; completely decouples autocomplete from the slow LLM. |
+| AI Engine | Ollama (`gemma4:31b-cloud`) via `llm.py` | Handles heavy, context-aware tasks like Grammar Correction and Tone rewriting. |
+| Backend API | FastAPI | Asynchronous Python framework; fast local execution. |
+| Frontend | Vanilla HTML/CSS/JS | No build step required; DOM-level control for precise ghost-layer rendering and dynamic resizing. |
+| Orchestrator | Node.js (`scripts/dev.js`) | Single-command cross-platform process management and dependency bootstrapping. |
 
 ### 3. Component Breakdown
 
-**A. Prediction Engine**
-- Tokenizes training corpus, builds:
-  - Unigram frequency table (fallback)
-  - Bigram table: `word_n-1 → {word_n: count}`
-  - Trigram table (optional, for better accuracy): `(word_n-2, word_n-1) → {word_n: count}`
-- `predict(text: str) -> list[str]`:
-  1. Take last 1–2 words of input.
-  2. Look up trigram matches; if none, fall back to bigram; if none, fall back to top unigrams.
-  3. Return top 3 by frequency.
+**A. Prediction Engine (`engine.py`)**
+- A custom N-gram engine trained on a mix of Cornell Movie Dialogs, a curated starter corpus, and hardcoded default phrases (boosted 50x to dominate noise).
+- Includes dynamic blending logic: `0.7 * base_score + 0.3 * personal_score` to prioritize words taught by the user.
+- **Endpoints:** `POST /predict` (debounced per keystroke, evaluated mid-word).
 
-**B. Backend API**
-- `POST /predict` — body: `{ "text": "how are" }` → response: `{ "suggestions": ["you", "things", "we"] }`
-- `GET /health` — basic liveness check.
-- CORS enabled for local frontend origin.
+**B. LLM Engine (`llm.py`)**
+- Connects to a local Ollama instance running `gemma4:31b-cloud`.
+- Highly constrained prompt engineering to prevent aggressive capitalization and conversational filler.
+- **Endpoints:** `POST /grammar`, `POST /tone`.
 
-**C. Frontend (Chat Bar UI)**
-- Centered input bar (visually like ChatGPT's).
-- `onkeyup` (debounced ~150ms) → calls `/predict` → renders suggestion chips.
-- Clicking a chip appends the word + a space to the input and re-triggers prediction.
-- No streaming needed for MVP (single request/response per keystroke pause).
+**C. Frontend (UI)**
+- `app.js` manages debouncing (instant for predict, 400ms for grammar).
+- **Dynamic Textarea:** Uses a `visibility: hidden` ghost layer (`#ghostLayer`) that mirrors the text + suggestions to measure `scrollHeight` precisely, updating the `<textarea>` height dynamically up to `50vh`.
+- Caches predictions on the client side to minimize redundant network calls.
 
-### 4. Data Model (MVP)
-No DB needed for MVP — model lives in memory, rebuilt from the corpus file(s) at server startup.
+### 4. Data Model & Persistence
+- **Base Model:** Pickled `model.pkl` generated by `train.py`.
+- **Personal Dictionary:** `data/personal.txt` stores user-taught phrases (append-only, one per line). `app.py` loads these on startup and folds them into the N-gram personal tables.
+- **Migration Safety:** `engine.py` implements `__setstate__` to backfill personal table attributes if an older pickle is loaded.
 
-Phase 2 (optional) SQLite tables:
-- `history(id, text, timestamp)` — logs what was typed, used to retrain/personalize.
-
-### 5. Non-Functional Requirements
-- **Latency:** prediction lookup should be O(1) dict access — sub-10ms; network round-trip dominates (~50–100ms target).
-- **Offline:** must work with no internet access after initial setup.
-- **Resource use:** should run comfortably on a small home server / laptop — no GPU needed for n-gram approach.
-- **Extensibility:** prediction engine should be swappable behind the same `/predict` API (so a local LLM via Ollama could replace it later without touching the frontend).
-
-### 6. Deployment
-- MVP: run backend with `uvicorn app:app --reload`, open static HTML file or `npm run dev` frontend, point it at `http://localhost:8000`.
-- Later: wrap in Docker Compose (`frontend` + `backend` services) to match your existing self-hosted stack pattern.
-
-### 7. Open Source Resources / Libraries
-
-**Language modeling / prediction:**
-- [`markovify`](https://github.com/jsvine/markovify) — dead-simple Markov chain text generation in Python, good for a quick n-gram-like predictor.
-- [`nltk`](https://www.nltk.org/) — has n-gram utilities (`nltk.ngrams`), tokenizers, and sample corpora built in.
-- [KenLM](https://github.com/kpu/kenlm) — fast, production-grade n-gram language model toolkit (more setup, much faster at scale).
-- [`spaCy`](https://spacy.io/) — good tokenizer if your corpus needs cleaner preprocessing.
-- [Hugging Face `tokenizers`](https://github.com/huggingface/tokenizers) — if you want subword-level tokenization instead of whole-word.
-
-**Corpora / training text (public domain / open):**
-- [Project Gutenberg](https://www.gutenberg.org/) — free books, good general-English corpus.
-- [Cornell Movie-Dialogs Corpus](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html) — conversational text, good for chat-style predictions.
-- [Tatoeba](https://tatoeba.org/) — large set of short, everyday sentences.
-- Your own WhatsApp/Telegram chat export — best for personalized predictions.
-
-**Backend:**
-- [FastAPI](https://fastapi.tiangolo.com/) — lightweight Python API framework, auto-generates docs.
-- [Flask](https://flask.palletsprojects.com/) — even simpler alternative if you don't need FastAPI's extras.
-
-**Frontend (chat-bar style UI):**
-- Plain HTML/CSS/JS is enough for MVP.
-- [Vercel AI SDK UI components](https://sdk.vercel.ai/) — prebuilt chat-input components if you want a polished ChatGPT-like bar fast.
-- [shadcn/ui](https://ui.shadcn.com/) — if going React, has clean input/command-palette components that fit a chat-bar look.
-
-**Optional future upgrade path:**
-- [Ollama](https://ollama.com/) — run small local LLMs (e.g., Phi-3, Llama 3.2 1B/3B) behind the same `/predict` API for smarter, context-aware suggestions once the n-gram MVP is working.
+### 5. Orchestration (`npm run dev`)
+- `scripts/bootstrap.js`: Pre-flight script that verifies Python existence, creates a `.venv`, pip installs `requirements.txt`, checks for the corpora, and runs `train.py` if `model.pkl` is missing.
+- `scripts/dev.js`: Spawns backend (`uvicorn`) and frontend (`node server.js`) concurrently, merging streams with color-coded prefixes (`[backend]`, `[frontend]`), and handles clean SIGINT teardowns to prevent orphaned processes on port 4000.

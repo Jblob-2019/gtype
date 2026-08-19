@@ -21,9 +21,11 @@
     <div class="bar-wrap" id="barWrap">
       <div class="bar">
         <div class="type-field" id="typeField">
+          <div class="grammar-layer" id="grammarLayer" aria-hidden="true"></div>
           <div class="ghost-layer" id="ghostLayer" aria-hidden="true"></div>
           <textarea id="typeInput" rows="1" placeholder="Start typing…" autocomplete="off" spellcheck="false"></textarea>
         </div>
+        <button class="tone-btn" id="toneBtn" title="Rewrite in a different tone (Formal → Friendly → Informal)" aria-label="Tone">🎭</button>
         <button class="teach-btn" id="teachBtn" title="Teach GhostType a word or phrase" aria-label="Teach">+</button>
       </div>
 
@@ -40,10 +42,23 @@
       </div>
     </div>
     <div class="hint">
-      <span><kbd>Tab</kbd> accept word (keep tapping to walk the sentence)</span>
+      <span><kbd>Tab</kbd> auto-complete (✨ Auto-grammar active)</span>
       <span><kbd>Esc</kbd> clear</span>
       <span><kbd>+</kbd> teach words</span>
+      <span><kbd>🎭</kbd> rewrite tone</span>
       <span class="meta" id="meta"></span>
+    </div>
+
+    <div class="rewrite-panel" id="rewritePanel" hidden>
+      <div class="rewrite-header">
+        <span class="rewrite-tone" id="rewriteTone">Friendly</span>
+        <button class="rewrite-cycle" id="rewriteCycle" title="Try a different tone">↻ next tone</button>
+        <button class="rewrite-close" id="rewriteClose" title="Discard">✕</button>
+      </div>
+      <div class="rewrite-output" id="rewriteOutput">…thinking…</div>
+      <div class="rewrite-actions">
+        <button class="rewrite-replace" id="rewriteReplace">Replace input</button>
+      </div>
     </div>
   </div>
 

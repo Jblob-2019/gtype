@@ -10,7 +10,12 @@ const server = http.createServer((req, res) => {
   const p = path.join(root, url);
   fs.readFile(p, (err, data) => {
     if (err) { res.writeHead(404); return res.end("not found"); }
-    res.writeHead(200, {"Content-Type": mime[path.extname(p)] || "text/plain"});
+    res.writeHead(200, {
+      "Content-Type": mime[path.extname(p)] || "text/plain",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    });
     res.end(data);
   });
 });
